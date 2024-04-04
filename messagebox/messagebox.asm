@@ -3,31 +3,38 @@ global _start
 
 _start:
 ; kernel32.dllのアドレスを取得
-    ; Ptr64 _PEB を取得 (gsはTEBのアドレスが設定されている)
+    ; Ptr64 _PEB を取得
+    ; gsはTEBのアドレスが設定されている
     mov rax, gs:[0x60]
+
     ; Ptr64 _PEB_LDR_DATA を取得
     mov rax, [rax + 0x18]
-    ; プロセスに読み込まれたモジュールのリンクリスト
-    ; WinDbgで!dllsを利用するとモジュールのリストが確認できる
+
     ; InMemoryOrderModuleList _LIST_ENTRY を取得
     mov rax, [rax + 0x20]
-    ; 以下2行はmessagebox.exeのアドレスを取得する場合
+
+    ; messagebox.exeのアドレスを取得する場合
     ; r10 = messagebox.exeのアドレス
     ; mov r10, [rax + 0x20]
+
     ; InMemoryOrderModuleList->Flink
     mov rax, [rax]
-    ; 以下2行はntdll.llのアドレスを取得する場合
+
+    ; ntdll.llのアドレスを取得する場合
     ; r11 = ntdll.dllのアドレス
     ; mov r11, [rax + 0x20]
+
     ; InMemoryOrderModuleList->Flink
     mov rax, [rax]
     ; rbx = kernel32.dllのアドレス
     mov rbx, [rax + 0x20]
-    ; kernelbase.dllのアドレスを取得する場合
+
+    ; KernelBase.dllのアドレスを取得する場合
     ; InMemoryOrderModuleList->Flink
     ; mov rax, [rax]
     ; r12 = KernelBase.dllのアドレス
     ; mov r12, [rax + 0x20]
+
 
 ; Get kernel32.dll &ExportTable
     xor rcx, rcx            ; rcxを0にする
