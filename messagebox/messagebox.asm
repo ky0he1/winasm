@@ -52,8 +52,8 @@ _start:
     ; rbx = e_flanew + kernel32.dllのアドレス
     add rbx, r8
 
-    ; (rcxの下位1バイト)clにIMAGE_EXPORTS_DIRECTORYへのオフセット0x88をセット
-    ; 0x88 = 0x170(DOSヘッダーからのオフセット) - 0xE8(PEヘッダーへのオフセット)
+    ; (rcxの下位1バイト)clにIMAGE_DATA_DIRECTORYへのオフセット0x88をセット
+    ; 0x88 = 0x18(PEヘッダーからOptionalヘッダー) + 0x70(optionalヘッダーからIMAGE_DATA_DIRECTORYまでのオフセット)
     mov cl, 0x88
     ; IMAGE_EXPORTS_DIRECTORYへのオフセットを取得
     ; edx = kernel32.dllのPEヘッダーのアドレス + 0x88
