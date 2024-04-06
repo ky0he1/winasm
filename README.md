@@ -25,10 +25,14 @@ cd messagebox
 ./build.sh
 ```
 
-シェルコードを作成して、それを呼び出すコードをコンパイル
+![messagebox](./demo/messagebox.png)
+
+シェルコードを作成して、それを呼び出すコードをコンパイル。
 
 ```.sh
 objdump -M intel -d messagebox.exe | grep '^ ' | cut -f2 | perl -pe 's/(\w{2})\s+/\\x\1/g'
 x86_64-w64-mingw32-gcc execmsgsh.c -o execmsgsh.exe
 ./execmsgsh.exe
 ```
+
+![execmsgsh](./demo/execmsgsh.png)
